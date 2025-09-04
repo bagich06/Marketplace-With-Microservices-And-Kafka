@@ -1,9 +1,9 @@
 package api
 
 import (
+	"Order_Service/internal/jwt"
 	"Order_Service/internal/models"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -134,38 +134,6 @@ func (api *api) DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (api *api) validateUserToken(r *http.Request) (*models.User, error) {
-	token := r.Header.Get("Authorization")
-	if token == "" {
-		return nil, errors.New("authorization header required")
-	}
-
-	req, err := http.NewRequest("GET", "http://localhost:8081/api/validate", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Authorization", token)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("invalid token")
-	}
-
-	var user models.User
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		return nil, err
-	}
-
-	return &user, nil
-}
-
 func (api *api) UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := api.validateUserToken(r)
 	if err != nil {
@@ -247,4 +215,25 @@ func (api *api) UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+}
+
+func (api *api) validateUserToken(r *http.Request) (*models.User, error) {
+	authHeader := r.Header.Get("Authorization")
+	tokenString, err := jwt.ExtractTokenFromHeader(authHeader)
+	if err != nil {
+		return nil, err
+	}
+
+	claims, err := jwt.ValidateToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &models.User{
+		ID:    claims.UserID,
+		Email: claims.Email,
+		Role:  claims.Role,
+	}
+
+	return user, nil
 }

@@ -28,7 +28,7 @@ func (api *api) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := jwt.GenerateToken(user.ID, user.Email)
+	token, err := jwt.GenerateToken(user.ID, user.Email, user.Role)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
@@ -70,7 +70,7 @@ func (api *api) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := jwt.GenerateToken(userID, req.Email)
+	token, err := jwt.GenerateToken(userID, user.Email, user.Role)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
@@ -91,35 +91,6 @@ func (api *api) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		"message": "Пользователь успешно зарегистрирован",
 		"user_id": userID,
 	})
-}
-
-func (api *api) ValidateHandler(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("Authorization")
-	if token == "" {
-		http.Error(w, "Authorization header required", http.StatusUnauthorized)
-		return
-	}
-
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
-	}
-
-	claims, err := jwt.ValidateToken(token)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
-		return
-	}
-
-	user, err := api.db.GetUserByID(claims.UserID)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-
-	user.Password = ""
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
 }
 
 func (api *api) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {

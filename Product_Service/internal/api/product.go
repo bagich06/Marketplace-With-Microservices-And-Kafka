@@ -1,9 +1,9 @@
 package api
 
 import (
+	"Product_Service/internal/jwt"
 	"Product_Service/internal/models"
 	"encoding/json"
-	"errors"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -118,33 +118,22 @@ func (api *api) GetAllProductsForSupplierHandler(w http.ResponseWriter, r *http.
 }
 
 func (api *api) validateUserToken(r *http.Request) (*models.User, error) {
-	token := r.Header.Get("Authorization")
-	if token == "" {
-		return nil, errors.New("authorization header required")
-	}
-
-	req, err := http.NewRequest("GET", "http://localhost:8081/api/validate", nil)
+	authHeader := r.Header.Get("Authorization")
+	tokenString, err := jwt.ExtractTokenFromHeader(authHeader)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", token)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	claims, err := jwt.ValidateToken(tokenString)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("invalid token")
+	user := &models.User{
+		ID:    claims.UserID,
+		Email: claims.Email,
+		Role:  claims.Role,
 	}
 
-	var user models.User
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	return user, nil
 }
