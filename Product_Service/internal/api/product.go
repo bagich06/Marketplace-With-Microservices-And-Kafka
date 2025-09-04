@@ -123,7 +123,7 @@ func (api *api) validateUserToken(r *http.Request) (*models.User, error) {
 		return nil, errors.New("authorization header required")
 	}
 
-	req, err := http.NewRequest("GET", "http://localhost:8080/api/validate", nil)
+	req, err := http.NewRequest("GET", "http://localhost:8081/api/validate", nil)
 	if err != nil {
 		return nil, err
 	}
