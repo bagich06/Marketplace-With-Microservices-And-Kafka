@@ -14,5 +14,5 @@ func main() {
 	}
 	api := api.NewAPI(mux.NewRouter(), db)
 	api.Handle()
-	log.Fatal(api.ListenAndServe("localhost:8080"))
+	log.Fatal(api.ListenAndServe("localhost:8081"))
 }
