@@ -20,6 +20,7 @@ func (api *api) Handle() {
 	api.r.HandleFunc("/api/login", api.LoginHandler)
 	api.r.HandleFunc("/api/register", api.RegisterHandler)
 	api.r.HandleFunc("/api/validate", api.ValidateHandler)
+	api.r.HandleFunc("/api/user/{id}", api.GetUserByIDHandler).Methods(http.MethodGet)
 }
 
 func (api *api) ListenAndServe(addr string) error {

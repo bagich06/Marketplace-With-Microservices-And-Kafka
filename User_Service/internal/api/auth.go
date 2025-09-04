@@ -5,6 +5,9 @@ import (
 	"User_Service/internal/models"
 	"encoding/json"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func (api *api) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -117,4 +120,38 @@ func (api *api) ValidateHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+func (api *api) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userIDStr, ok := vars["id"]
+	if !ok {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	user, err := api.db.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	user.Password = ""
+
+	userResponse := map[string]interface{}{
+		"id":       user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+		"role":     user.Role,
+		"phone":    "+7900" + strconv.Itoa(1000000+user.ID),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userResponse)
 }
