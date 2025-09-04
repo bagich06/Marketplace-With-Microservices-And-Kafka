@@ -2,9 +2,11 @@ package main
 
 import (
 	"Order_Service/internal/api"
+	"Order_Service/internal/kafka"
 	"Order_Service/internal/repository"
-	"github.com/gorilla/mux"
 	"log"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -12,7 +14,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	api := api.NewAPI(mux.NewRouter(), db)
+
+	kafkaProducer, err := kafka.NewProducer([]string{"localhost:9092"})
+	if err != nil {
+		log.Printf("Failed to create Kafka producer: %v", err)
+	}
+
+	api := api.NewAPI(mux.NewRouter(), db, kafkaProducer)
 	api.Handle()
-	log.Fatal(api.ListenAndServe("localhost:8082"))
+
+	log.Println("Order Service started on :8083")
+	log.Fatal(api.ListenAndServe("localhost:8083"))
 }

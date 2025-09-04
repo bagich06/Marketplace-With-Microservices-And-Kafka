@@ -6,4 +6,9 @@ type Order struct {
 	ProductID   int    `json:"product_id"`
 	SupplierID  int    `json:"supplier_id"`
 	ClientID    int    `json:"client_id"`
+	Status      string `json:"status"`
+}
+
+type UpdateOrderStatusRequest struct {
+	Status string `json:"status"`
 }
