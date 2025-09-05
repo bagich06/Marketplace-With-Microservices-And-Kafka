@@ -1,11 +1,13 @@
-module Notification_Service
+module Payment_Service
 
 go 1.24
 
 require (
 	github.com/IBM/sarama v1.46.0
+	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/go-uuid v1.0.3
-	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+	github.com/lib/pq v1.10.2
 )
 
 require (
@@ -13,7 +15,6 @@ require (
 	github.com/eapache/go-resiliency v1.7.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
@@ -25,5 +26,4 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
-	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )

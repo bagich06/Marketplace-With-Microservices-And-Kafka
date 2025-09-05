@@ -1,9 +1,9 @@
 package api
 
 import (
-	"Order_Service/internal/jwt"
 	"Order_Service/internal/models"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -31,28 +31,11 @@ func (api *api) CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	order.ClientID = user.ID
-	order.Status = "pending"
 
 	orderID, err := api.db.CreateOrder(order)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	}
-
-	if api.producer != nil {
-		orderEvent := models.OrderEvent{
-			EventType:   "order_created",
-			OrderID:     orderID,
-			ProductName: order.ProductName,
-			ProductID:   order.ProductID,
-			SupplierID:  order.SupplierID,
-			ClientID:    order.ClientID,
-			Timestamp:   time.Now(),
-		}
-
-		if err := api.producer.PublishMessage("order-events", orderEvent); err != nil {
-			log.Printf("Failed to publish order created event: %v", err)
-		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -218,22 +201,33 @@ func (api *api) UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (api *api) validateUserToken(r *http.Request) (*models.User, error) {
-	authHeader := r.Header.Get("Authorization")
-	tokenString, err := jwt.ExtractTokenFromHeader(authHeader)
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		return nil, errors.New("authorization header required")
+	}
+
+	req, err := http.NewRequest("GET", "http://localhost:8080/api/validate", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	claims, err := jwt.ValidateToken(tokenString)
+	req.Header.Set("Authorization", token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	user := &models.User{
-		ID:    claims.UserID,
-		Email: claims.Email,
-		Role:  claims.Role,
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("invalid token")
 	}
 
-	return user, nil
+	var user models.User
+	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
