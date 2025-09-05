@@ -18,6 +18,7 @@ type Consumer struct {
 
 type NotificationHandler interface {
 	HandleOrderEvent(event models.OrderEvent) error
+	HandlePaymentEvent(event models.PaymentEvent) error
 }
 
 func NewConsumer(brokers []string, topics []string, handler NotificationHandler) *Consumer {
@@ -84,15 +85,46 @@ func (h *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 
 			log.Printf("Received message from topic %s: %s", message.Topic, string(message.Value))
 
-			var orderEvent models.OrderEvent
-			if err := json.Unmarshal(message.Value, &orderEvent); err != nil {
+			// Сначала пытаемся определить тип события по содержимому
+			var messageData map[string]interface{}
+			if err := json.Unmarshal(message.Value, &messageData); err != nil {
 				log.Printf("Error unmarshaling message: %v", err)
 				session.MarkMessage(message, "")
 				continue
 			}
 
-			if err := h.handler.HandleOrderEvent(orderEvent); err != nil {
-				log.Printf("Error handling order event: %v", err)
+			eventType, ok := messageData["event_type"].(string)
+			if !ok {
+				log.Printf("No event_type found in message")
+				session.MarkMessage(message, "")
+				continue
+			}
+
+			// Определяем тип события и обрабатываем соответственно
+			switch eventType {
+			case "order_created", "order_status_updated":
+				// Это OrderEvent
+				var orderEvent models.OrderEvent
+				if err := json.Unmarshal(message.Value, &orderEvent); err == nil {
+					if err := h.handler.HandleOrderEvent(orderEvent); err != nil {
+						log.Printf("Error handling order event: %v", err)
+					}
+				} else {
+					log.Printf("Error unmarshaling OrderEvent: %v", err)
+				}
+			case "payment_required", "payment_completed":
+				// Это PaymentEvent
+				var paymentEvent models.PaymentEvent
+				if err := json.Unmarshal(message.Value, &paymentEvent); err == nil {
+					log.Printf("Received payment event: %+v", paymentEvent)
+					if err := h.handler.HandlePaymentEvent(paymentEvent); err != nil {
+						log.Printf("Error handling payment event: %v", err)
+					}
+				} else {
+					log.Printf("Error unmarshaling PaymentEvent: %v", err)
+				}
+			default:
+				log.Printf("Unknown event type: %s", eventType)
 			}
 
 			session.MarkMessage(message, "")

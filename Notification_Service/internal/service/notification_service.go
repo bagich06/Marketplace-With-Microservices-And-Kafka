@@ -14,6 +14,8 @@ import (
 type EmailServiceInterface interface {
 	SendEmail(notification models.EmailNotification) error
 	CreateOrderNotificationEmail(orderEvent models.OrderEvent, userInfo models.UserInfo) models.EmailNotification
+	CreatePaymentRequiredNotificationEmail(orderEvent models.OrderEvent, userInfo models.UserInfo) models.EmailNotification
+	CreatePaymentCompletedNotificationEmail(orderEvent models.OrderEvent, userInfo models.UserInfo) models.EmailNotification
 }
 
 type NotificationService struct {
@@ -42,6 +44,11 @@ func (ns *NotificationService) HandleOrderEvent(event models.OrderEvent) error {
 	case "order_status_updated":
 		if err := ns.sendOrderStatusUpdateNotificationToClient(event); err != nil {
 			log.Printf("Failed to send status update notification to client: %v", err)
+		}
+
+	case "payment_completed":
+		if err := ns.sendPaymentCompletedNotificationToClient(event); err != nil {
+			log.Printf("Failed to send payment completed notification to client: %v", err)
 		}
 
 	default:
@@ -146,4 +153,94 @@ func (ns *NotificationService) getUserInfo(userID int) (*models.UserInfo, error)
 	}
 
 	return &userInfo, nil
+}
+
+func (ns *NotificationService) sendPaymentCompletedNotificationToClient(event models.OrderEvent) error {
+	log.Printf("Sending payment completed notification for order %d", event.OrderID)
+
+	userInfo, err := ns.getUserInfo(event.ClientID)
+	if err != nil {
+		return fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	notification := ns.emailService.CreatePaymentCompletedNotificationEmail(event, *userInfo)
+	if err := ns.emailService.SendEmail(notification); err != nil {
+		return fmt.Errorf("failed to send payment completed email: %w", err)
+	}
+
+	log.Printf("Payment completed notification sent to %s for order %d", userInfo.Email, event.OrderID)
+	return nil
+}
+
+func (ns *NotificationService) HandlePaymentEvent(event models.PaymentEvent) error {
+	log.Printf("Processing payment event: %+v", event)
+
+	switch event.EventType {
+	case "payment_required":
+		if err := ns.sendPaymentRequiredNotificationToClient(event); err != nil {
+			log.Printf("Failed to send payment required notification to client: %v", err)
+		}
+	case "payment_completed":
+		if err := ns.sendPaymentCompletedNotificationToClientFromPaymentEvent(event); err != nil {
+			log.Printf("Failed to send payment completed notification to client: %v", err)
+		}
+	default:
+		log.Printf("Unknown payment event type: %s", event.EventType)
+	}
+
+	return nil
+}
+
+func (ns *NotificationService) sendPaymentCompletedNotificationToClientFromPaymentEvent(event models.PaymentEvent) error {
+	log.Printf("Sending payment completed notification for order %d", event.OrderID)
+
+	userInfo, err := ns.getUserInfo(event.ClientID)
+	if err != nil {
+		return fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	// Создаем OrderEvent из PaymentEvent для совместимости с существующим методом
+	orderEvent := models.OrderEvent{
+		EventType: "payment_completed",
+		OrderID:   event.OrderID,
+		ClientID:  event.ClientID,
+		Amount:    event.Amount,
+		Status:    event.Status,
+		Timestamp: event.Timestamp,
+	}
+
+	notification := ns.emailService.CreatePaymentCompletedNotificationEmail(orderEvent, *userInfo)
+	if err := ns.emailService.SendEmail(notification); err != nil {
+		return fmt.Errorf("failed to send payment completed email: %w", err)
+	}
+
+	log.Printf("Payment completed notification sent to %s for order %d", userInfo.Email, event.OrderID)
+	return nil
+}
+
+func (ns *NotificationService) sendPaymentRequiredNotificationToClient(event models.PaymentEvent) error {
+	log.Printf("Sending payment required notification for order %d", event.OrderID)
+
+	userInfo, err := ns.getUserInfo(event.ClientID)
+	if err != nil {
+		return fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	// Создаем OrderEvent из PaymentEvent для совместимости с существующим методом
+	orderEvent := models.OrderEvent{
+		EventType: "payment_required",
+		OrderID:   event.OrderID,
+		ClientID:  event.ClientID,
+		Amount:    event.Amount,
+		Status:    event.Status,
+		Timestamp: event.Timestamp,
+	}
+
+	notification := ns.emailService.CreatePaymentRequiredNotificationEmail(orderEvent, *userInfo)
+	if err := ns.emailService.SendEmail(notification); err != nil {
+		return fmt.Errorf("failed to send payment required email: %w", err)
+	}
+
+	log.Printf("Payment required notification sent to %s for order %d", userInfo.Email, event.OrderID)
+	return nil
 }

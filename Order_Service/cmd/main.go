@@ -23,6 +23,6 @@ func main() {
 	api := api.NewAPI(mux.NewRouter(), db, kafkaProducer)
 	api.Handle()
 
-	log.Println("Order Service started on :8083")
-	log.Fatal(api.ListenAndServe("localhost:8083"))
+	log.Println("Order Service started on :8084")
+	log.Fatal(api.ListenAndServe("localhost:8084"))
 }

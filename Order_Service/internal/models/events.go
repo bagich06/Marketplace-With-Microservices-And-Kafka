@@ -9,6 +9,7 @@ type OrderEvent struct {
 	ProductID   int       `json:"product_id"`
 	SupplierID  int       `json:"supplier_id"`
 	ClientID    int       `json:"client_id"`
+	Amount      float64   `json:"amount"`
 	Status      string    `json:"status,omitempty"`
 	Timestamp   time.Time `json:"timestamp"`
 }
