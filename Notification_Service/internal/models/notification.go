@@ -6,8 +6,6 @@ type NotificationType string
 
 const (
 	NotificationTypeEmail NotificationType = "email"
-	NotificationTypeSMS   NotificationType = "sms"
-	NotificationTypePush  NotificationType = "push"
 )
 
 type NotificationStatus string
@@ -56,16 +54,4 @@ type EmailNotification struct {
 	Subject string `json:"subject"`
 	Body    string `json:"body"`
 	HTML    bool   `json:"html"`
-}
-
-type SMSNotification struct {
-	PhoneNumber string `json:"phone_number"`
-	Message     string `json:"message"`
-}
-
-type PushNotification struct {
-	UserID  int                    `json:"user_id"`
-	Title   string                 `json:"title"`
-	Message string                 `json:"message"`
-	Data    map[string]interface{} `json:"data,omitempty"`
 }
