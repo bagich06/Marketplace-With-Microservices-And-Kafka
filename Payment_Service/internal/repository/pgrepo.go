@@ -21,7 +21,6 @@ func NewPGRepo(connectionString string) (*PGRepo, error) {
 		return nil, err
 	}
 
-	// Создаем таблицу payments если не существует
 	if err := createPaymentsTable(db); err != nil {
 		return nil, err
 	}

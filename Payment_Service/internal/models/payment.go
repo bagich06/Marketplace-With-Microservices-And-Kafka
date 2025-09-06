@@ -8,17 +8,12 @@ const (
 	PaymentStatusPending   PaymentStatus = "pending"
 	PaymentStatusCompleted PaymentStatus = "completed"
 	PaymentStatusFailed    PaymentStatus = "failed"
-	PaymentStatusRefunded  PaymentStatus = "refunded"
 )
 
 type PaymentMethod string
 
 const (
-	PaymentMethodCard        PaymentMethod = "card"
-	PaymentMethodBankTransfer PaymentMethod = "bank_transfer"
-	PaymentMethodPayPal      PaymentMethod = "paypal"
-	PaymentMethodApplePay    PaymentMethod = "apple_pay"
-	PaymentMethodGooglePay   PaymentMethod = "google_pay"
+	PaymentMethodCard PaymentMethod = "card"
 )
 
 type Payment struct {
@@ -41,13 +36,13 @@ type CreatePaymentRequest struct {
 }
 
 type ProcessPaymentRequest struct {
-	PaymentID     string        `json:"payment_id"`
-	PaymentMethod PaymentMethod `json:"payment_method"`
-	CardNumber    string        `json:"card_number,omitempty"`
-	ExpiryMonth   int           `json:"expiry_month,omitempty"`
-	ExpiryYear    int           `json:"expiry_year,omitempty"`
-	CVV           string        `json:"cvv,omitempty"`
-	CardholderName string       `json:"cardholder_name,omitempty"`
+	PaymentID      string        `json:"payment_id"`
+	PaymentMethod  PaymentMethod `json:"payment_method"`
+	CardNumber     string        `json:"card_number,omitempty"`
+	ExpiryMonth    int           `json:"expiry_month,omitempty"`
+	ExpiryYear     int           `json:"expiry_year,omitempty"`
+	CVV            string        `json:"cvv,omitempty"`
+	CardholderName string        `json:"cardholder_name,omitempty"`
 }
 
 type PaymentResponse struct {

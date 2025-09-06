@@ -17,7 +17,6 @@ import (
 func main() {
 	log.Println("Starting Payment Service...")
 
-	// Подключение к базе данных
 	db, err := repository.NewPGRepo("postgres://postgres:postgres@localhost:5432/payment_db?sslmode=disable")
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)

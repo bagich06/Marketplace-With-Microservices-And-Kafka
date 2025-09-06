@@ -39,7 +39,7 @@ func (api *api) CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Отправляем событие в Kafka
+	// Создали событие о создании заказа
 	if api.producer != nil {
 		orderEvent := models.OrderEvent{
 			EventType:   "order_created",
@@ -53,6 +53,7 @@ func (api *api) CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 			Timestamp:   time.Now(),
 		}
 
+		// Отправляем его в кафку
 		if err := api.producer.PublishMessage("order-events", orderEvent); err != nil {
 			log.Printf("Failed to publish order created event: %v", err)
 		}
@@ -199,6 +200,7 @@ func (api *api) UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Создали новое событие с обновлением статуса
 	if api.producer != nil {
 		orderEvent := models.OrderEvent{
 			EventType:   "order_status_updated",
@@ -212,6 +214,7 @@ func (api *api) UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request)
 			Timestamp:   time.Now(),
 		}
 
+		// Отправили его в кафку
 		if err := api.producer.PublishMessage("order-events", orderEvent); err != nil {
 			log.Printf("Failed to publish order status updated event: %v", err)
 		}

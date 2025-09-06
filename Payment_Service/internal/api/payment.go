@@ -38,6 +38,7 @@ func (api *api) CreatePaymentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Вызываем .CreatePayment из payment_service, который отвечает за отправку уведомлений в кафку
 	response, err := api.paymentService.CreatePayment(request, user.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -132,13 +133,13 @@ func (api *api) ProcessPaymentHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Вызывваем .ProcessPayment из payment_service, для того, чтобы выполнить платеж и отправить сообщение в кафку
 	err = api.paymentService.ProcessPayment(paymentID, request)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Получаем обновленный платеж
 	updatedPayment, err := api.paymentService.GetPayment(paymentID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

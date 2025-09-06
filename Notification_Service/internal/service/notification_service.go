@@ -199,7 +199,6 @@ func (ns *NotificationService) sendPaymentCompletedNotificationToClientFromPayme
 		return fmt.Errorf("failed to get user info: %w", err)
 	}
 
-	// Создаем OrderEvent из PaymentEvent для совместимости с существующим методом
 	orderEvent := models.OrderEvent{
 		EventType: "payment_completed",
 		OrderID:   event.OrderID,
@@ -226,7 +225,6 @@ func (ns *NotificationService) sendPaymentRequiredNotificationToClient(event mod
 		return fmt.Errorf("failed to get user info: %w", err)
 	}
 
-	// Создаем OrderEvent из PaymentEvent для совместимости с существующим методом
 	orderEvent := models.OrderEvent{
 		EventType: "payment_required",
 		OrderID:   event.OrderID,

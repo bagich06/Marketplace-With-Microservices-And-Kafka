@@ -84,7 +84,6 @@ func (h *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 
 			log.Printf("Received message from topic %s: %s", message.Topic, string(message.Value))
 
-			// Сначала пытаемся определить тип события по содержимому
 			var messageData map[string]interface{}
 			if err := json.Unmarshal(message.Value, &messageData); err != nil {
 				log.Printf("Error unmarshaling message: %v", err)
@@ -99,10 +98,8 @@ func (h *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 				continue
 			}
 
-			// Определяем тип события и обрабатываем соответственно
 			switch eventType {
 			case "order_created", "order_status_updated":
-				// Это OrderEvent
 				var orderEvent models.OrderEvent
 				if err := json.Unmarshal(message.Value, &orderEvent); err == nil {
 					if err := h.handler.HandleOrderEvent(orderEvent); err != nil {
@@ -112,7 +109,6 @@ func (h *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 					log.Printf("Error unmarshaling OrderEvent: %v", err)
 				}
 			case "payment_required", "payment_completed":
-				// Это PaymentEvent - Payment Service не обрабатывает свои собственные события
 				log.Printf("Ignoring own payment event: %s", eventType)
 			default:
 				log.Printf("Unknown event type: %s", eventType)
